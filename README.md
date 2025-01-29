@@ -21,3 +21,27 @@
 ### How to Run:
 1. Clone the repository.
 2. Open `index.html` in your browser.
+
+---
+
+## Português
+
+**Casa AuAu** é um projeto desenvolvido para praticar e aprimorar habilidades com **Bootstrap 5**. Ele simula um site para conectar cães e seus donos, com foco em design responsivo e elementos interativos.
+
+### Funcionalidades:
+- **Design Responsivo:** Layout otimizado para todos os tamanhos de tela.
+- **Seções Interativas:**
+  - Página inicial com call-to-action.
+  - Features destacando os benefícios da plataforma.
+  - Planos de preços com diferentes categorias.
+  - Depoimentos de usuários satisfeitos.
+- **Navegação no Rodapé:** Links para as principais seções.
+
+### Tecnologias Utilizadas:
+- **HTML5** para estrutura.
+- **Bootstrap 5** para layout e responsividade.
+- **Google Fonts (Poppins)** para tipografia.
+
+### Como Executar:
+1. Clone o repositório.
+2. Abra o arquivo `index.html` no navegador.
