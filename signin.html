@@ -28,22 +28,28 @@
     </div>
     <script>
         document.getElementById("registerForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
+        e.preventDefault();
 
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-            const response = await fetch("http://localhost:3000/register", { 
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password }),
-            });
-
-            const data = await response.json();
-            alert(data.message);
-            window.location.href = "index.html"
+        const response = await fetch("http://localhost:3000/register", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password }),
         });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Registration successful!");
+            localStorage.setItem("token", data.token);
+            window.location.href = "index.html";
+        } else {
+            alert(data.error);
+        }
+    });
     </script>
 </body>
 </html>

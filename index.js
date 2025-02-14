@@ -3,6 +3,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken")
 
 const app = express();
 app.use(express.json());
@@ -22,21 +23,44 @@ db.connect((err) => {
         console.log("Connected to MySQL");
     }
 });
-
 app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        db.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
-        [name, email, hashedPassword], (err, result) => {
+        db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
             if (err) {
-                console.error("Error inserting user:", err);
-                return res.status(500).json({ error: "Error registering user" });
+                console.error("Database query error:", err);
+                return res.status(500).json({ error: "Internal Server Error" });
             }
-            res.status(201).json({ message: "User registered successfully" });
+
+            if (results.length > 0) {
+                return res.status(400).json({ error: "Email is already registered" });
+            }
+
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+            db.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
+            [name, email, hashedPassword], (err, result) => {
+                if (err) {
+                    console.error("Error inserting user:", err);
+                    return res.status(500).json({ error: "Error registering user" });
+                }
+
+                const user = { id: result.insertId, email };
+
+                try {
+                    const token = jwt.sign(
+                        { userId: user.id, email: user.email },
+                        process.env.JWT_SECRET,
+                        { expiresIn: '1h' }
+                    );
+                    res.status(201).json({ message: "User registered successfully", token });
+                } catch (jwtError) {
+                    console.error("Error generating JWT:", jwtError);
+                    res.status(500).json({ error: "Error generating token" });
+                }
+            });
         });
     } catch (error) {
         console.error("Error hashing password:", error);
@@ -44,25 +68,39 @@ app.post("/register", async (req, res) => {
     }
 });
 
-app.post("/login", async(req, res) =>{
-    const {email, password} = req.body
-    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) =>{
-        if(err){
-            console.error("Database query error: ", err)
-            return res.status(500).json({error: "Internal Server Error"})
-        }
-        if(results.length == 0 ){
-            return res.status(401).json({error: "Invalid email or password"})
-        }
-        const user = results[0]
-        const passwordMatch = await bcrypt.compare(password, user.password)
 
-        if(!passwordMatch){
-            return res.status(401).json({error: "Invalid email or password" })
-        }
-        res.json({ message: "Login successful", user: { id: user.id, email: user.email } });
-    })
-})
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+            if (err) {
+                console.error("Database query error:", err);
+                return res.status(500).json({ error: "Internal Server Error" });
+            }
+
+            if (results.length === 0) {
+                return res.status(400).json({ error: "Invalid email or password" });
+            }
+
+            const user = results[0];
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+
+            if (!isPasswordValid) {
+                return res.status(400).json({ error: "Invalid email or password" });
+            }
+
+            const token = jwt.sign(
+                { userId: user.id, email: user.email },
+                process.env.JWT_SECRET,{ expiresIn: '1h' }
+            );
+            res.status(200).json({ message: "Login successful", token });
+        });
+    } catch (error) {
+        console.error("Error during login:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 app.listen(3000, () => {
     console.log("Server running on port 3000");
