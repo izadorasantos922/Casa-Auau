@@ -22,5 +22,28 @@
         </form>
         <p class="text-center mt-3">Don't have an account? <a href="/signin">Sign up</a></p>
     </div>
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://localhost:3000/login", { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+
+            });
+
+            const data = await response.json();
+            if(response.ok){
+                alert("Login sucessful!")
+                window.location.href = "index.html"
+            }
+            else{
+                alert(data.error)
+            }
+        });
+    </script>
 </body>
 </html>
